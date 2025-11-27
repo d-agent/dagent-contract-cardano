@@ -21,38 +21,22 @@ validator stake {
     let expected =
       when r is {
         // add stake to users map
-        CreateStake { client, provider, amount, userId } ->
-          transition.create_stake(
-            old,
-            CreateStake { client, provider, amount, userId },
-          )
+        CreateStake { .. } -> transition.create_stake(old, r)
 
         // transfer stake between users
-        TransferStake { from_userId, to_userId, amount } ->
-          transition.transfer_stake(
-            old,
-            TransferStake { from_userId, to_userId, amount },
-          )
+        TransferStake { .. } -> transition.transfer_stake(old, r)
 
         // pull stake from a user
-        PullStake { userId, amount } ->
-          transition.pull_stake(old, PullStake { userId, amount })
+        PullStake { .. } -> transition.pull_stake(old, r)
 
         // pull all stake from a user
-        PullAllStake { userId } ->
-          transition.pull_all_stake(old, PullAllStake { userId })
+        PullAllStake { .. } -> transition.pull_all_stake(old, r)
 
-        // query total stake for an address
-        GetAddressStake { address: _address } ->
-          // - import aiken/list
-          // - add an expect that some stake matches the address
-          old
+        GetAddressStake { address: _ } -> fail
 
-        // query total stake amount
-        GetTotalStake -> old
+        GetTotalStake -> fail
 
-        // query total stake count
-        GetTotalStakeCount -> old
+        GetTotalStakeCount -> fail
       }
 
     check.enforce_invariants(expected)

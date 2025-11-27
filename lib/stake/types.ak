@@ -3,7 +3,7 @@ pub type Stake {
     client: ByteArray,
     provider: ByteArray,
     amount: Int,
-    userId: ByteArray,
+    user_id: ByteArray,
   }
 }
 
@@ -18,12 +18,12 @@ pub type StakeActions {
     client: ByteArray,
     provider: ByteArray,
     amount: Int,
-    userId: ByteArray,
+    user_id: ByteArray,
   }
-  TransferStake { from_userId: ByteArray, to_userId: ByteArray, amount: Int }
-  PullStake { userId: ByteArray, amount: Int }
+  TransferStake { from_user_id: ByteArray, to_user_id: ByteArray, amount: Int }
+  PullStake { user_id: ByteArray, amount: Int }
   GetAddressStake { address: ByteArray }
-  PullAllStake { userId: ByteArray }
+  PullAllStake { user_id: ByteArray }
   GetTotalStake
   GetTotalStakeCount
 }

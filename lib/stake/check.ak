@@ -12,8 +12,9 @@ pub fn get_own_input(oref: OutputReference, tx: Transaction) {
 pub fn get_continuing_output(oref: OutputReference, tx: Transaction) {
   let own_input = get_own_input(oref, tx)
   let addr = own_input.output.address
-
-  expect Some(out) = list.find(tx.outputs, fn(o) { o.address == addr })
+  let value = own_input.output.value
+  expect Some(out) =
+    list.find(tx.outputs, fn(o) { o.address == addr && o.value == value })
 
   out
 }
