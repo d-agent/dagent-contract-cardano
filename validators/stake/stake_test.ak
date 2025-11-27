@@ -1,14 +1,11 @@
 use aiken/collection/list
-use stake/types.{Stake, StakeDatum, CreateStake, TransferStake, PullStake, PullAllStake}
 use stake/transition
+use stake/types.{
+  CreateStake, PullAllStake, PullStake, Stake, StakeDatum, TransferStake,
+}
 
 test create_stake_updates_total() {
-  let before =
-    StakeDatum {
-      stakes: [],
-      total_stake: 0,
-      total_count: 0,
-    }
+  let before = StakeDatum { stakes: [], total_stake: 0, total_count: 0 }
 
   let act =
     CreateStake {
@@ -25,12 +22,7 @@ test create_stake_updates_total() {
 }
 
 test create_stake_adds_new_stake() {
-  let before =
-    StakeDatum {
-      stakes: [],
-      total_stake: 0,
-      total_count: 0,
-    }
+  let before = StakeDatum { stakes: [], total_stake: 0, total_count: 0 }
 
   let act =
     CreateStake {
@@ -43,7 +35,6 @@ test create_stake_adds_new_stake() {
   let after = transition.create_stake(before, act)
 
   expect list.length(after.stakes) == 1
-  
   expect Some(stake) = list.head(after.stakes)
   expect stake.client == "client1"
   expect stake.provider == "provider1"
@@ -52,12 +43,7 @@ test create_stake_adds_new_stake() {
 }
 
 test create_stake_multiple_users() {
-  let state1 =
-    StakeDatum {
-      stakes: [],
-      total_stake: 0,
-      total_count: 0,
-    }
+  let state1 = StakeDatum { stakes: [], total_stake: 0, total_count: 0 }
 
   let act1 =
     CreateStake {
@@ -94,26 +80,18 @@ test transfer_stake_partial_amount() {
     }
 
   let before =
-    StakeDatum {
-      stakes: [initial_stake],
-      total_stake: 100,
-      total_count: 1,
-    }
+    StakeDatum { stakes: [initial_stake], total_stake: 100, total_count: 1 }
 
   let act =
-    TransferStake {
-      from_userId: "user1",
-      to_userId: "user2",
-      amount: 30,
-    }
+    TransferStake { from_userId: "user1", to_userId: "user2", amount: 30 }
 
   let after = transition.transfer_stake(before, act)
 
   expect after.total_stake == 100
-  
   expect after.total_count == 2
 
-  expect Some(from_stake) = list.find(after.stakes, fn(s) { s.userId == "user1" })
+  expect Some(from_stake) =
+    list.find(after.stakes, fn(s) { s.userId == "user1" })
   expect Some(to_stake) = list.find(after.stakes, fn(s) { s.userId == "user2" })
 
   expect from_stake.amount == 70
@@ -130,23 +108,14 @@ test transfer_stake_full_amount() {
     }
 
   let before =
-    StakeDatum {
-      stakes: [initial_stake],
-      total_stake: 100,
-      total_count: 1,
-    }
+    StakeDatum { stakes: [initial_stake], total_stake: 100, total_count: 1 }
 
   let act =
-    TransferStake {
-      from_userId: "user1",
-      to_userId: "user2",
-      amount: 100,
-    }
+    TransferStake { from_userId: "user1", to_userId: "user2", amount: 100 }
 
   let after = transition.transfer_stake(before, act)
 
   expect after.total_stake == 100
-  
   expect after.total_count == 1
 
   expect Some(to_stake) = list.find(after.stakes, fn(s) { s.userId == "user2" })
@@ -173,26 +142,18 @@ test transfer_stake_to_existing_user() {
     }
 
   let before =
-    StakeDatum {
-      stakes: [stake1, stake2],
-      total_stake: 150,
-      total_count: 2,
-    }
+    StakeDatum { stakes: [stake1, stake2], total_stake: 150, total_count: 2 }
 
   let act =
-    TransferStake {
-      from_userId: "user1",
-      to_userId: "user2",
-      amount: 40,
-    }
+    TransferStake { from_userId: "user1", to_userId: "user2", amount: 40 }
 
   let after = transition.transfer_stake(before, act)
 
   expect after.total_stake == 150
-  
   expect after.total_count == 2
 
-  expect Some(from_stake) = list.find(after.stakes, fn(s) { s.userId == "user1" })
+  expect Some(from_stake) =
+    list.find(after.stakes, fn(s) { s.userId == "user1" })
   expect Some(to_stake) = list.find(after.stakes, fn(s) { s.userId == "user2" })
 
   expect from_stake.amount == 60
@@ -209,22 +170,13 @@ test pull_stake_partial_amount() {
     }
 
   let before =
-    StakeDatum {
-      stakes: [initial_stake],
-      total_stake: 100,
-      total_count: 1,
-    }
+    StakeDatum { stakes: [initial_stake], total_stake: 100, total_count: 1 }
 
-  let act =
-    PullStake {
-      userId: "user1",
-      amount: 30,
-    }
+  let act = PullStake { userId: "user1", amount: 30 }
 
   let after = transition.pull_stake(before, act)
 
   expect after.total_stake == 70
-  
   expect after.total_count == 1
 
   expect Some(stake) = list.find(after.stakes, fn(s) { s.userId == "user1" })
@@ -241,22 +193,13 @@ test pull_stake_full_amount() {
     }
 
   let before =
-    StakeDatum {
-      stakes: [initial_stake],
-      total_stake: 100,
-      total_count: 1,
-    }
+    StakeDatum { stakes: [initial_stake], total_stake: 100, total_count: 1 }
 
-  let act =
-    PullStake {
-      userId: "user1",
-      amount: 100,
-    }
+  let act = PullStake { userId: "user1", amount: 100 }
 
   let after = transition.pull_stake(before, act)
 
   expect after.total_stake == 0
-  
   expect after.total_count == 0
   expect list.is_empty(after.stakes)
 }
@@ -279,26 +222,19 @@ test pull_stake_leaves_other_stakes() {
     }
 
   let before =
-    StakeDatum {
-      stakes: [stake1, stake2],
-      total_stake: 150,
-      total_count: 2,
-    }
+    StakeDatum { stakes: [stake1, stake2], total_stake: 150, total_count: 2 }
 
-  let act =
-    PullStake {
-      userId: "user1",
-      amount: 40,
-    }
+  let act = PullStake { userId: "user1", amount: 40 }
 
   let after = transition.pull_stake(before, act)
 
   expect after.total_stake == 110
-  
   expect after.total_count == 2
 
-  expect Some(user1_stake) = list.find(after.stakes, fn(s) { s.userId == "user1" })
-  expect Some(user2_stake) = list.find(after.stakes, fn(s) { s.userId == "user2" })
+  expect Some(user1_stake) =
+    list.find(after.stakes, fn(s) { s.userId == "user1" })
+  expect Some(user2_stake) =
+    list.find(after.stakes, fn(s) { s.userId == "user2" })
 
   expect user1_stake.amount == 60
   expect user2_stake.amount == 50
@@ -314,21 +250,13 @@ test pull_all_stake_single_user() {
     }
 
   let before =
-    StakeDatum {
-      stakes: [initial_stake],
-      total_stake: 100,
-      total_count: 1,
-    }
+    StakeDatum { stakes: [initial_stake], total_stake: 100, total_count: 1 }
 
-  let act =
-    PullAllStake {
-      userId: "user1",
-    }
+  let act = PullAllStake { userId: "user1" }
 
   let after = transition.pull_all_stake(before, act)
 
   expect after.total_stake == 0
-  
   expect after.total_count == 0
   expect list.is_empty(after.stakes)
 }
@@ -365,90 +293,74 @@ test pull_all_stake_multiple_users() {
       total_count: 3,
     }
 
-  let act =
-    PullAllStake {
-      userId: "user2",
-    }
+  let act = PullAllStake { userId: "user2" }
 
   let after = transition.pull_all_stake(before, act)
 
   expect after.total_stake == 175
-  
   expect after.total_count == 2
 
   expect None = list.find(after.stakes, fn(s) { s.userId == "user2" })
-  
-  expect Some(user1_stake) = list.find(after.stakes, fn(s) { s.userId == "user1" })
-  expect Some(user3_stake) = list.find(after.stakes, fn(s) { s.userId == "user3" })
+  expect Some(user1_stake) =
+    list.find(after.stakes, fn(s) { s.userId == "user1" })
+  expect Some(user3_stake) =
+    list.find(after.stakes, fn(s) { s.userId == "user3" })
 
   expect user1_stake.amount == 100
   expect user3_stake.amount == 75
 }
 
 test complex_workflow_scenario() {
-  let state0 =
-    StakeDatum {
-      stakes: [],
-      total_stake: 0,
-      total_count: 0,
-    }
+  let state0 = StakeDatum { stakes: [], total_stake: 0, total_count: 0 }
 
-  let state1 = transition.create_stake(
-    state0,
-    CreateStake {
-      client: "client1",
-      provider: "provider1",
-      amount: 1000,
-      userId: "user1",
-    },
-  )
+  let state1 =
+    transition.create_stake(
+      state0,
+      CreateStake {
+        client: "client1",
+        provider: "provider1",
+        amount: 1000,
+        userId: "user1",
+      },
+    )
   expect state1.total_stake == 1000
   expect state1.total_count == 1
 
-  let state2 = transition.create_stake(
-    state1,
-    CreateStake {
-      client: "client2",
-      provider: "provider2",
-      amount: 500,
-      userId: "user2",
-    },
-  )
+  let state2 =
+    transition.create_stake(
+      state1,
+      CreateStake {
+        client: "client2",
+        provider: "provider2",
+        amount: 500,
+        userId: "user2",
+      },
+    )
   expect state2.total_stake == 1500
   expect state2.total_count == 2
 
-  let state3 = transition.transfer_stake(
-    state2,
-    TransferStake {
-      from_userId: "user1",
-      to_userId: "user3",
-      amount: 200,
-    },
-  )
+  let state3 =
+    transition.transfer_stake(
+      state2,
+      TransferStake { from_userId: "user1", to_userId: "user3", amount: 200 },
+    )
   expect state3.total_stake == 1500
   expect state3.total_count == 3
 
-  let state4 = transition.pull_stake(
-    state3,
-    PullStake {
-      userId: "user2",
-      amount: 100,
-    },
-  )
+  let state4 =
+    transition.pull_stake(state3, PullStake { userId: "user2", amount: 100 })
   expect state4.total_stake == 1400
   expect state4.total_count == 3
 
-  let state5 = transition.pull_all_stake(
-    state4,
-    PullAllStake {
-      userId: "user3",
-    },
-  )
+  let state5 =
+    transition.pull_all_stake(state4, PullAllStake { userId: "user3" })
   expect state5.total_stake == 1200
   expect state5.total_count == 2
 
-  expect Some(user1_final) = list.find(state5.stakes, fn(s) { s.userId == "user1" })
-  expect Some(user2_final) = list.find(state5.stakes, fn(s) { s.userId == "user2" })
+  expect Some(user1_final) =
+    list.find(state5.stakes, fn(s) { s.userId == "user1" })
+  expect Some(user2_final) =
+    list.find(state5.stakes, fn(s) { s.userId == "user2" })
   expect None = list.find(state5.stakes, fn(s) { s.userId == "user3" })
 
   expect user1_final.amount == 800

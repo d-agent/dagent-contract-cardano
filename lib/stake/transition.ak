@@ -1,5 +1,8 @@
 use aiken/collection/list
-use stake/types.{Stake, StakeDatum, StakeActions, CreateStake, TransferStake, PullStake, PullAllStake}
+use stake/types.{
+  CreateStake, PullAllStake, PullStake, Stake, StakeActions, StakeDatum,
+  TransferStake,
+}
 
 fn sum_amounts(stakes: List<Stake>) -> Int {
   list.foldr(stakes, 0, fn(s: Stake, acc) { acc + s.amount })
@@ -9,24 +12,14 @@ fn recalc_state(stakes: List<Stake>) -> StakeDatum {
   let total = sum_amounts(stakes)
   let count = list.length(stakes)
 
-  StakeDatum {
-    stakes: stakes,
-    total_stake: total,
-    total_count: count,
-  }
+  StakeDatum { stakes, total_stake: total, total_count: count }
 }
 
 pub fn create_stake(old: StakeDatum, act: StakeActions) -> StakeDatum {
   expect CreateStake { client, provider, amount, userId } = act
-  expect True = amount > 0
+  expect amount > 0
 
-  let new_stake =
-    Stake.Record {
-      client,
-      provider,
-      amount,
-      userId,
-    }
+  let new_stake = Stake.Record { client, provider, amount, userId }
 
   let new_stakes = [new_stake, ..old.stakes]
 
@@ -35,15 +28,14 @@ pub fn create_stake(old: StakeDatum, act: StakeActions) -> StakeDatum {
 
 pub fn transfer_stake(old: StakeDatum, act: StakeActions) -> StakeDatum {
   expect TransferStake { from_userId, to_userId, amount } = act
-  expect True = amount > 0
+  expect amount > 0
 
   expect Some(from_stake) =
     list.find(old.stakes, fn(s) { s.userId == from_userId })
 
-  expect True = from_stake.amount >= amount
+  expect from_stake.amount >= amount
 
-  let to_opt =
-    list.find(old.stakes, fn(s) { s.userId == to_userId })
+  let to_opt = list.find(old.stakes, fn(s) { s.userId == to_userId })
 
   let base =
     list.filter(
@@ -92,7 +84,7 @@ pub fn transfer_stake(old: StakeDatum, act: StakeActions) -> StakeDatum {
             Stake.Record {
               client: from_stake.client,
               provider: from_stake.provider,
-              amount: amount,
+              amount,
               userId: to_userId,
             },
             ..base
@@ -102,7 +94,7 @@ pub fn transfer_stake(old: StakeDatum, act: StakeActions) -> StakeDatum {
             Stake.Record {
               client: from_stake.client,
               provider: from_stake.provider,
-              amount: amount,
+              amount,
               userId: to_userId,
             },
             ..base
@@ -115,12 +107,11 @@ pub fn transfer_stake(old: StakeDatum, act: StakeActions) -> StakeDatum {
 
 pub fn pull_stake(old: StakeDatum, act: StakeActions) -> StakeDatum {
   expect PullStake { userId, amount } = act
-  expect True = amount > 0
+  expect amount > 0
 
-  expect Some(stake) =
-    list.find(old.stakes, fn(s) { s.userId == userId })
+  expect Some(stake) = list.find(old.stakes, fn(s) { s.userId == userId })
 
-  expect True = amount <= stake.amount
+  expect amount <= stake.amount
 
   let updated =
     Stake.Record {
@@ -130,8 +121,7 @@ pub fn pull_stake(old: StakeDatum, act: StakeActions) -> StakeDatum {
       userId: stake.userId,
     }
 
-  let without =
-    list.filter(old.stakes, fn(s) { s.userId != userId })
+  let without = list.filter(old.stakes, fn(s) { s.userId != userId })
 
   let new_stakes =
     if updated.amount > 0 {
@@ -146,11 +136,9 @@ pub fn pull_stake(old: StakeDatum, act: StakeActions) -> StakeDatum {
 pub fn pull_all_stake(old: StakeDatum, act: StakeActions) -> StakeDatum {
   expect PullAllStake { userId } = act
 
-  expect Some(_stake) =
-    list.find(old.stakes, fn(s) { s.userId == userId })
+  expect Some(_stake) = list.find(old.stakes, fn(s) { s.userId == userId })
 
-  let new_stakes =
-    list.filter(old.stakes, fn(s) { s.userId != userId })
+  let new_stakes = list.filter(old.stakes, fn(s) { s.userId != userId })
 
   recalc_state(new_stakes)
 }

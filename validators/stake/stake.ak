@@ -1,7 +1,10 @@
-use stake/types.{StakeDatum, StakeActions, CreateStake, TransferStake, PullStake, PullAllStake, GetAddressStake, GetTotalStake, GetTotalStakeCount}
-use cardano/transaction.{Transaction, OutputReference}
-use stake/transition
+use cardano/transaction.{OutputReference, Transaction}
 use stake/check
+use stake/transition
+use stake/types.{
+  CreateStake, GetAddressStake, GetTotalStake, GetTotalStakeCount, PullAllStake,
+  PullStake, StakeActions, StakeDatum, TransferStake,
+}
 
 validator stake {
   spend(
@@ -12,26 +15,32 @@ validator stake {
   ) {
     expect Some(old) = datum
 
-  let out = check.get_continuing_output(oref, tx)
-  let new = check.read_datum_from_output(out)
+    let out = check.get_continuing_output(oref, tx)
+    let new = check.read_datum_from_output(out)
 
     let expected =
       when r is {
         // add stake to users map
         CreateStake { client, provider, amount, userId } ->
-          transition.create_stake(old, CreateStake { client: client, provider: provider, amount: amount, userId: userId })
+          transition.create_stake(
+            old,
+            CreateStake { client, provider, amount, userId },
+          )
 
         // transfer stake between users
         TransferStake { from_userId, to_userId, amount } ->
-          transition.transfer_stake(old, TransferStake { from_userId: from_userId, to_userId: to_userId, amount: amount })
+          transition.transfer_stake(
+            old,
+            TransferStake { from_userId, to_userId, amount },
+          )
 
         // pull stake from a user
         PullStake { userId, amount } ->
-          transition.pull_stake(old, PullStake { userId: userId, amount: amount })
+          transition.pull_stake(old, PullStake { userId, amount })
 
         // pull all stake from a user
         PullAllStake { userId } ->
-          transition.pull_all_stake(old, PullAllStake { userId: userId })
+          transition.pull_all_stake(old, PullAllStake { userId })
 
         // query total stake for an address
         GetAddressStake { address: _address } ->
@@ -40,18 +49,20 @@ validator stake {
           old
 
         // query total stake amount
-        GetTotalStake ->
-          old
+        GetTotalStake -> old
 
         // query total stake count
-        GetTotalStakeCount ->
-          old
+        GetTotalStakeCount -> old
       }
 
-  check.enforce_invariants(expected)
+    check.enforce_invariants(expected)
 
-    expect True = (new == expected)
+    expect new == expected
 
     True
+  }
+
+  else(_) {
+    fail
   }
 }
