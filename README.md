@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎯 DAgent Contractor - Cardano
+# 🎯 DAgent Contract- Cardano
 
 ### Decentralized Agent Registration & Staking Platform
 
