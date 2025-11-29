@@ -1,0 +1,21 @@
+use agents/types.{Agent, AgentDatum}
+
+test basic_agent_creation() {
+  let agent = Agent {
+    agent_address: "test_address",
+    provider: "test_provider",
+    agent_id_hash: "test_hash",
+    owner: "test_owner",
+    is_active: True,
+    created_at: 0,
+    updated_at: 0,
+    metadata_uri: "test_uri",
+  }
+  
+  let datum = AgentDatum {
+    agents: [agent],
+    total_count: 1,
+  }
+  
+  datum.total_count == 1
+}

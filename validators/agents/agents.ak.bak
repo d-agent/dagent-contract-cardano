@@ -1,0 +1,39 @@
+use cardano/transaction.{OutputReference, Transaction}
+use agents/transition
+use agents/types.{
+  AgentActions, AgentDatum, GetAgent, GetTotalAgentCount, IsAgentActive,
+  RegisterAgent, UpdateAgent,
+}
+
+validator agents {
+  spend(
+    datum: Option<AgentDatum>,
+    r: AgentActions,
+    oref: OutputReference,
+    tx: Transaction,
+  ) {
+    expect Some(old) = datum
+
+    when r is {
+      RegisterAgent { .. } -> {
+        let new_datum = transition.register_agent(old, r, tx)
+        new_datum.total_count > old.total_count
+      }
+
+      UpdateAgent { .. } -> {
+        let new_datum = transition.update_agent(old, r, tx)
+        True
+      }
+
+      GetAgent { .. } -> transition.get_agent(old, r)
+
+      IsAgentActive { .. } -> transition.is_agent_active(old, r)
+
+      GetTotalAgentCount -> old.total_count >= 0
+    }
+  }
+
+  else(_) {
+    fail
+  }
+}

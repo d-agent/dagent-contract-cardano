@@ -1,0 +1,80 @@
+use aiken/collection/list
+use cardano/transaction.{Transaction}
+use agents/types.{Agent, AgentActions, AgentDatum, RegisterAgent, UpdateAgent}
+
+pub fn register_agent(
+  datum: AgentDatum,
+  action: AgentActions,
+  tx: Transaction,
+) -> AgentDatum {
+  when action is {
+    RegisterAgent { agent_address, agent_id_hash, owner, metadata_uri } -> {
+      expect !agent_exists(datum.agents, agent_address)
+      
+      let new_agent = Agent {
+        agent_address,
+        provider: #"",  // Will be set from transaction context
+        agent_id_hash,
+        owner,
+        is_active: True,
+        created_at: 0,  // Simplified for now
+        updated_at: 0,
+        metadata_uri,
+      }
+      
+      AgentDatum {
+        agents: [new_agent, ..datum.agents],
+        total_count: datum.total_count + 1,
+      }
+    }
+    _ -> fail
+  }
+}
+
+pub fn update_agent(
+  datum: AgentDatum,
+  action: AgentActions,
+  tx: Transaction,
+) -> AgentDatum {
+  when action is {
+    UpdateAgent { agent_address, is_active, metadata_uri } -> {
+      let updated_agents = list.map(datum.agents, fn(agent) {
+        if agent.agent_address == agent_address {
+          Agent { ..agent, is_active, metadata_uri }
+        } else {
+          agent
+        }
+      })
+      
+      AgentDatum { ..datum, agents: updated_agents }
+    }
+    _ -> fail
+  }
+}
+
+pub fn get_agent(datum: AgentDatum, action: AgentActions) -> Bool {
+  when action is {
+    GetAgent { agent_address } -> agent_exists(datum.agents, agent_address)
+    _ -> False
+  }
+}
+
+pub fn is_agent_active(datum: AgentDatum, action: AgentActions) -> Bool {
+  when action is {
+    IsAgentActive { agent_address } -> {
+      when find_agent(datum.agents, agent_address) is {
+        Some(agent) -> agent.is_active
+        None -> False
+      }
+    }
+    _ -> False
+  }
+}
+
+fn agent_exists(agents: List<Agent>, agent_address: ByteArray) -> Bool {
+  list.any(agents, fn(agent) { agent.agent_address == agent_address })
+}
+
+fn find_agent(agents: List<Agent>, agent_address: ByteArray) -> Option<Agent> {
+  list.find(agents, fn(agent) { agent.agent_address == agent_address })
+}
