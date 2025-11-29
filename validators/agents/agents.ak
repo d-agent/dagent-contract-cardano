@@ -75,10 +75,7 @@ fn get_current_time(validity_range: ValidityRange) -> Int {
 }
 
 // Helper function to verify provider signature
-fn is_signed_by(
-  transaction: Transaction,
-  vk: VerificationKeyHash,
-) -> Bool {
+fn is_signed_by(transaction: Transaction, vk: VerificationKeyHash) -> Bool {
   list.has(transaction.extra_signatories, vk)
 }
 
@@ -307,7 +304,8 @@ test update_agent_replaces_old_agent() {
       metadata_uri: #"01020304",
     }
 
-  let initial_datum = AgentDatum { contract_owner: #"abcd1234", agents: [existing_agent] }
+  let initial_datum =
+    AgentDatum { contract_owner: #"abcd1234", agents: [existing_agent] }
 
   let current_time = 2000
 
